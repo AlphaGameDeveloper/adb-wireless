@@ -19,14 +19,7 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     #[command(about = "Generate QR code for adb wireless connection")]
-    Pair {
-        #[arg(
-            help = "Debugging port on the device",
-            required = true,
-            value_name = "PORT"
-        )]
-        port: u16,
-    },
+    Pair,
     #[command(about = "Map TCP ports from device to host")]
     Reverse {
         #[arg(
@@ -62,15 +55,19 @@ fn run_cli(cli: Cli) -> Result<(), CliError> {
                 );
             }
         }
-        Commands::Pair { port } => {
+        Commands::Pair => {
             let service = PairService::new()?;
             service.start_discovery()?;
 
             qr2term::print_qr(service.qrtext())?;
             println!("QR code generated. Scan it with your device to pair.");
 
-            let address = service.wait_for_pairing()?;
-            adb_connect_device(&address, &service.password, port)?;
+            let device = service.wait_for_pairing()?;
+            println!(
+                "Device found at {}:{}",
+                device.address, device.debugging_port
+            );
+            adb_connect_device(&device, &service.password)?;
 
             println!("Device connected");
         }

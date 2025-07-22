@@ -17,5 +17,7 @@ clap = { version = "4.5.41", features = ["derive"] }
 
 # multicast DNS
 mdns-sd = "0.13.11"
+flume = "0.11.1"
+
 # QR code generator
 qr2term = "0.3.3"
