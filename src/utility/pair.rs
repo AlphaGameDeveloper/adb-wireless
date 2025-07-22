@@ -62,7 +62,7 @@ impl PairService {
                         let client_addresses = info.get_addresses();
                         let port = info.get_port();
                         let _ = self.mdns.stop_browse(SERVICE_TYPE);
-                        if let Some(addr) = client_addresses.iter().next() {
+                        if let Some(addr) = client_addresses.iter().find(|addr| addr.is_ipv4()) {
                             return Ok(SocketAddr::new(*addr, port));
                         } else {
                             return Err(CliError::MdnsError(mdns_sd::Error::Msg(

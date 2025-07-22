@@ -14,18 +14,17 @@ pub fn adb_ensure_running() -> Result<(), CliError> {
     }
 
     // Start ADB server
-    match std::process::Command::new("adb")
-        .arg("start-server")
-        .output()
-    {
-        Ok(output) => {
-            if !output.status.success() {
+    let mut cmd = std::process::Command::new("adb");
+    cmd.arg("start-server");
+
+    let mut child = cmd.spawn().map_err(|err| CliError::AdbServerError(err))?;
+
+    match child.wait() {
+        Ok(status) => {
+            if !status.success() {
                 return Err(CliError::AdbServerError(std::io::Error::new(
                     std::io::ErrorKind::Other,
-                    format!(
-                        "Failed to start ADB server. {}",
-                        String::from_utf8_lossy(&output.stderr)
-                    ),
+                    "Failed to start ADB server.".to_string(),
                 )));
             }
         }
@@ -61,7 +60,11 @@ pub fn adb_reverse_port(mapping: &PortMapping) -> Result<(), CliError> {
     Ok(())
 }
 
-pub fn adb_connect_device(address: &SocketAddr, password: &str) -> Result<(), CliError> {
+pub fn adb_connect_device(
+    address: &SocketAddr,
+    password: &str,
+    debug_port: u16,
+) -> Result<(), CliError> {
     match std::process::Command::new("adb")
         .arg("pair")
         .arg(format!("{}:{}", address.ip(), address.port()))
@@ -73,10 +76,28 @@ pub fn adb_connect_device(address: &SocketAddr, password: &str) -> Result<(), Cl
                 return Err(CliError::AdbServerError(std::io::Error::new(
                     std::io::ErrorKind::Other,
                     format!(
-                        "Failed to connect to device at {}. {}",
+                        "Failed to pair with device at {}. {}",
                         address,
                         String::from_utf8_lossy(&output.stderr)
                     ),
+                )));
+            }
+        }
+        Err(err) => return Err(CliError::AdbServerError(err)),
+    }
+
+    let mut cmd = std::process::Command::new("adb");
+    cmd.arg("connect")
+        .arg(format!("{}:{}", address.ip(), debug_port));
+
+    let mut child = cmd.spawn().map_err(|err| CliError::AdbServerError(err))?;
+
+    match child.wait() {
+        Ok(status) => {
+            if !status.success() {
+                return Err(CliError::AdbServerError(std::io::Error::new(
+                    std::io::ErrorKind::Other,
+                    format!("Failed to connect to device at {}:{}", address, debug_port,),
                 )));
             }
         }
