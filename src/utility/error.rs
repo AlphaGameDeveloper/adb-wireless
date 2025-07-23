@@ -6,6 +6,8 @@ pub enum CliError {
     AdbNotFound,
     #[error("ADB server error. {0}")]
     AdbServerError(#[from] std::io::Error),
+    #[error("No connected devices found")]
+    NoDevicesFound,
     #[error("Invalid port mapping: {0}")]
     InvalidPortMapping(String),
     #[error("Failed to generate QR code. {0}")]

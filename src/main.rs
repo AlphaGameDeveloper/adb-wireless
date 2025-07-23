@@ -2,7 +2,8 @@ use clap::{Parser, Subcommand};
 
 mod utility;
 use utility::{
-    CliError, PairService, PortMapping, adb_connect_device, adb_ensure_running, adb_reverse_port,
+    CliError, PairService, PortMapping, adb_connect_device, adb_ensure_running, adb_list_devices,
+    adb_reverse_port,
 };
 
 #[derive(Parser)]
@@ -45,10 +46,27 @@ fn run_cli(cli: Cli) -> Result<(), CliError> {
 
     match cli.command {
         Commands::Reverse { ports } => {
+            let devices = adb_list_devices()?;
+
+            if devices.is_empty() {
+                return Err(CliError::NoDevicesFound);
+            }
+            let selected_device = if devices.len() > 1 {
+                let selected_index = dialoguer::Select::new()
+                    .with_prompt("Select a device")
+                    .items(&devices)
+                    .default(0)
+                    .interact()
+                    .map_err(|e| CliError::UnexpectedError(e.to_string()))?;
+                devices[selected_index].clone()
+            } else {
+                devices[0].clone()
+            };
+
             // Handle reverse port mapping
             for port in ports {
                 let mapping = PortMapping::new(&port)?;
-                adb_reverse_port(&mapping)?;
+                adb_reverse_port(&selected_device, &mapping)?;
                 println!(
                     "Reversed port {}:{}",
                     mapping.device_port, mapping.host_port
