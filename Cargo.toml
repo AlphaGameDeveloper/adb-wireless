@@ -1,8 +1,8 @@
 [package]
 name = "adb-wireless"
-version = "0.1.2"
+version = "0.2.0-alphagamedeveloper"
 edition = "2024"
-authors = ["teamclouday <teamclouday@gmail.com>"]
+authors = ["teamclouday <teamclouday@gmail.com>", "Damien Boisvert <damien@alphagame.dev>"]
 license = "Apache-2.0"
 description = "CLI tool to generate QR code for adb wireless connection"
 homepage = "https://github.com/teamclouday/adb-wireless"

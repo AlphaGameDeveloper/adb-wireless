@@ -41,7 +41,9 @@ impl PairService {
     }
 
     pub fn qrtext(&self) -> String {
-        format!("WIFI:T:ADB;S:{};P:{};;", self.service_name, self.password)
+        let text = format!("WIFI:T:ADB;S:{};P:{};;", self.service_name, self.password);
+        println!("{}", text);
+        text
     }
 
     pub fn start_discovery(&self) -> Result<(), CliError> {
